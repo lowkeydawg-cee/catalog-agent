@@ -50,6 +50,17 @@ def test_ollama_check_reports_missing_model():
     ok.check()
 
 
+def test_ollama_check_reports_model_that_cannot_load():
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/tags":
+            return httpx.Response(200, json={"models": [{"name": "llama3.2-vision:latest"}]})
+        return httpx.Response(500, json={"error": "llama-server reported out-of-memory during startup"})
+
+    client = OllamaVisionClient(transport=httpx.MockTransport(handler))
+    with pytest.raises(VisionModelError, match="failed to load.*smaller model"):
+        client.check()
+
+
 @pytest.mark.parametrize("polling", [False, True])
 def test_watcher_processes_new_and_existing_files(settings, store, make_processor, good_reply, tmp_path, polling):
     processor, _ = make_processor([good_reply])
