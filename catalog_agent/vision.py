@@ -53,6 +53,21 @@ class OllamaVisionClient:
         if not any(name == self.model or name.split(":")[0] == self.model for name in names):
             raise VisionModelError(f"Model '{self.model}' is not pulled. Run: ollama pull {self.model}")
 
+        # Being pulled isn't enough: the model may not fit in memory or this Ollama build may not
+        # support it. An empty generate request makes Ollama load the model without generating.
+        try:
+            response = self._client.post("/api/generate", json={"model": self.model, "prompt": ""})
+        except httpx.HTTPError as exc:
+            raise VisionModelError(f"Ollama failed while loading '{self.model}': {exc}") from exc
+        if response.status_code >= 400:
+            detail = response.text[:300]
+            hint = ""
+            if "memory" in detail.lower() or "alloc" in detail.lower():
+                hint = " Not enough free RAM: close other apps or try a smaller model (e.g. qwen2.5vl:3b, moondream)."
+            elif "architecture" in detail.lower():
+                hint = " This Ollama version can't run this model: update Ollama or pick another model."
+            raise VisionModelError(f"Model '{self.model}' is pulled but failed to load: {detail}{hint}")
+
     def chat(self, messages: list[dict[str, Any]], json_schema: dict | None = None) -> str:
         payload: dict[str, Any] = {
             "model": self.model,
