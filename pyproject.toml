@@ -1,0 +1,25 @@
+[project]
+name = "catalog-agent"
+version = "0.1.0"
+description = "Local event-driven agent that turns 3D-print photos into catalog listings and social copy via Ollama."
+requires-python = ">=3.10"
+dependencies = [
+    "watchdog>=4.0",
+    "httpx>=0.27",
+    "pydantic>=2.6",
+    "python-slugify>=8.0",
+    "Pillow>=10.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+catalog-agent = "catalog_agent.__main__:main"
+
+[tool.setuptools]
+packages = ["catalog_agent"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

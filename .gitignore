@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+catalog.db
+logs/
+input_images/
+processed_images/
+failed_images/
